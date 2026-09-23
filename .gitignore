@@ -1,0 +1,42 @@
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+build/
+dist/
+wheels/
+*.egg-info
+.uv-cache/
+
+# ---------- 虚拟环境 ----------
+.venv/
+venv/
+env/
+
+# ---------- 敏感配置（本地保留，不入库） ----------
+.env
+
+# ---------- 日志 ----------
+logs/
+*.log
+
+# ---------- IDE ----------
+.idea/
+.vscode/
+*.iml
+
+# ---------- 前端 ----------
+node_modules/
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# ---------- 本地大文件（按 README 说明自行下载） ----------
+# bge-large-zh-v1.5 向量模型（约 1.3G）
+docker/embedding/
+# Elasticsearch IK 中文分词插件
+docker/elasticsearch/plugins/*.zip
+
+# ---------- 系统 ----------
+.DS_Store
+Thumbs.db

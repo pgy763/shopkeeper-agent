@@ -1,0 +1,39 @@
+[project]
+name = "shopkeeper-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "蒲公英", email = "3024000798@qq.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "asyncmy>=0.2.14",
+    "cryptography>=50.0.1",
+    "elasticsearch[async]>=8,<9",
+    "fastapi[standard]>=0.141.1",
+    "greenlet>=3.5.5",
+    "huggingface-hub>=1.31.0",
+    "jieba>=0.42.1",
+    "langchain>=1.4.0",
+    "langchain-deepseek>=1.1.0",
+    "langchain-huggingface>=1.2.2",
+    "langgraph>=1.2.11",
+    "loguru>=0.7.3",
+    "omegaconf>=2.3.1",
+    "python-dotenv>=1.2.3",
+    "pyyaml>=6.0.3",
+    "qdrant-client>=1.19.0",
+    "sqlalchemy>=2.0.52",
+]
+
+[project.scripts]
+shopkeeper-agent = "shopkeeper_agent:main"
+
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+package = false
+
