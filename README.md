@@ -27,7 +27,9 @@
 - [接口说明](#接口说明)
 - [元数据知识库是怎么建起来的](#元数据知识库是怎么建起来的)
 - [技术亮点](#技术亮点)
+- [已知限制](#已知限制)
 - [常见问题](#常见问题)
+- [深入文档](#深入文档)
 
 ---
 
@@ -185,7 +187,7 @@ shopkeeper-agent/
 │   ├── core/                        # 日志与请求上下文
 │   ├── prompt/prompt_loader.py      # 提示词加载器
 │   └── scripts/build_meta_knowledge.py  # 知识库构建脚本入口
-├── prompts/                         # 6 个提示词模板（关键词扩展、过滤、SQL 生成与校正）
+├── prompts/                         # 7 个提示词模板（关键词扩展、过滤、SQL 生成与校正）
 ├── conf/
 │   ├── app_config.yaml              # 基础设施与模型配置
 │   └── meta_config.yaml             # 表、字段、指标的口径定义（知识库唯一数据源）
@@ -194,6 +196,7 @@ shopkeeper-agent/
 │   ├── mysql/meta.sql               # 元数据库建表脚本
 │   ├── mysql/dw.sql                 # 示例电商数仓（1 事实表 + 4 维度表）
 │   └── elasticsearch/Dockerfile     # 内置 IK 中文分词插件的 ES 镜像
+├── docs/                            # 深入文档：架构 / 接口 / 元数据 / 排查 / 已知限制
 ├── examples/qdrant_quickstart_demo.py
 └── frontend/                        # React 前端
     ├── src/App.tsx                  # 会话状态、SSE 事件消费与页面布局
@@ -305,6 +308,8 @@ pnpm dev
 
 ## 接口说明
 
+> 完整的协议细节、客户端示例（curl / TypeScript / Python）和事件语义，见 **[接口说明](docs/api.md)**。
+
 ### `POST /api/query`
 
 请求体：
@@ -374,7 +379,19 @@ curl -N -X POST http://127.0.0.1:8000/api/query \
 7. **全链路 request_id**：`contextvars` 保证并发协程间互不干扰，`loguru.patch` 自动注入到每条日志，出问题能按请求回溯。
 8. **配置驱动的知识库**：表、字段、指标、别名、是否同步取值全部写在 `meta_config.yaml`，改元数据不用改代码。
 
+## 已知限制
+
+这是一个**跑得通的完整链路**，不是生产系统。几条最要紧的边界先摆在这里，完整清单（含代码位置和建议改法）见 **[已知限制](docs/limitations.md)**：
+
+- **接口没有鉴权，生成的 SQL 直接执行** —— 只靠 `explain` 校验语法，不限制全表扫描。上线前必须给数仓配只读账号、在应用层加 `LIMIT` 和查询超时
+- **重建知识库不幂等** —— Meta MySQL 会主键冲突，Qdrant 的向量点 id 是 `uuid4`、旧点不删。重建前要先清库，步骤见 [元数据知识库](docs/metadata.md#重建的正确姿势)
+- **纠错只有一轮** —— `correct_sql` 之后不再校验，第二轮还错就直接报错
+- **没有缓存、没有多轮** —— 同一个问题问两次等于跑两遍全链路；追问「再按品类拆一下」不支持
+- **没有测试和 CI** —— 仓库里没有 `tests/` 和 `.github/workflows/`
+
 ## 常见问题
+
+> 更系统的排查路径（按现象分层、带诊断命令）见 **[排查手册](docs/troubleshooting.md)**。
 
 **ES 容器构建失败，提示找不到插件包？**
 `docker/elasticsearch/plugins/` 下的 IK 插件 zip 没有入库，需要先按 [第 1 步](#1-先准备两个大文件) 下载再执行 `docker compose up -d --build`。
@@ -390,6 +407,18 @@ curl -N -X POST http://127.0.0.1:8000/api/query \
 
 **生成 SQL 报模型调用失败？**
 检查 `.env` 里的 `LLM_API_KEY` 是否填了、有没有额度，以及 `base_url` 与 `model_name` 是否匹配同一家供应商（本项目用 OpenAI 兼容协议，可自由切换）。
+
+---
+
+## 深入文档
+
+| 文档 | 讲什么 |
+| --- | --- |
+| [架构说明](docs/architecture.md) | 一次请求的完整生命周期、为什么 State 与 Context 要分开、并发与资源、离线构建链路、错误边界 |
+| [接口说明](docs/api.md) | SSE 事件协议、三种事件的字段、`校验SQL success` 不等于 SQL 正确、断连与超时、三种客户端示例 |
+| [元数据知识库](docs/metadata.md) | `meta_config.yaml` 每个字段的含义、构建三步各写了什么、检索参数怎么调、重建的正确姿势 |
+| [排查手册](docs/troubleshooting.md) | 按现象排查：服务起不来 / 问数卡住 / 结果不对（分四步定位）/ 性能 |
+| [已知限制](docs/limitations.md) | 安全、正确性、工程三方面的边界，以及继续做的优先级 |
 
 ---
 
