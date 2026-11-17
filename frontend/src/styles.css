@@ -35,6 +35,19 @@ textarea {
     font: inherit;
 }
 
+/* 输入框随内容长高，不再是一行高度里滚动。
+   field-sizing 的兼容性：Chrome/Edge 123（2024-03）、Safari 26.2（2025-12）、
+   Firefox 152（2026-06），Baseline 2026-06-16。不支持的浏览器会退回 rows={1}
+   的固定高度，内容超了在框内滚动 —— 也就是改动之前的样子。
+   高度上下限仍由 Tailwind 的 min-h-11 / max-h-36 约束。 */
+.composer-input {
+    field-sizing: content;
+    height: auto;
+    /* 兜底：flex 子项的 min-width 默认是 auto，内容一长就会把父容器撑开，
+       把右边的发送按钮挤出屏幕。这一行是 flexbox 的标准防护。 */
+    min-width: 0;
+}
+
 ::selection {
     background: rgba(47, 107, 79, 0.2);
 }
