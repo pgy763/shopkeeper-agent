@@ -31,10 +31,15 @@ export function Composer({
     };
 
     const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-        if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            if (!disabled) onSubmit();
-        }
+        if (event.key !== "Enter" || event.shiftKey) return;
+        // 默认行为必须先挡掉：textarea 里回车是换行，input 里回车会再触发一次隐式提交。
+        event.preventDefault();
+        // 输入法正在选词时，回车是在确认候选字，不是发送。
+        // keyCode 229 用来兜住 Safari：它会在 compositionend 之后才派发那个回车，
+        // 那时 nativeEvent.isComposing 已经复位成 false 了。
+        const native = event.nativeEvent;
+        if (native.isComposing || native.keyCode === 229) return;
+        if (!disabled) onSubmit();
     };
 
     return (
